@@ -1,0 +1,138 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+
+```{r }
+
+
+pkgs <- c(  "sqldf", "SmartEDA", "psych",  "tidyr", "mosaicData", "carData",
+          "VIM", "scales", "treemapify",  "ggmap", "choroplethr",
+          "choroplethrMaps", "CGPfunctions",
+          "ggcorrplot", "visreg",
+          "gcookbook", "forcats",
+          "survival", "survminer", "robCompositions",
+          "ggalluvial", "ggridges", "wordcloud2", "highcharter",
+          "GGally", "superheat", "ggalluvial", "ggeffects", "viridis", "countrycode",
+          "waterfalls", "factoextra",
+          "networkD3", "ggthemes", "packcircles",
+          "hrbrthemes", "ggpol", "ggbeeswarm", "naniar", "missMDA", "mice", "Amelia", "FactoMineR", "car", "DescTools", "relaimpo", "MVN", "psych")
+
+install.packages(pkgs, repos = "http://cran.us.r-project.org")
+
+``` 
+
+
+
+```{r }
+library(readr)
+library(readxl)
+library(tidyverse) # metapackage of all tidyverse packages
+library(naniar)
+library(FactoMineR)
+library(missMDA)
+library(SnowballC) # for stemming
+library(readxl) # for read xlsx file 
+library(plotly)
+library(kableExtra)
+library(ggpubr)
+library(corrr)
+library(DataExplorer)
+library(SmartEDA)
+library(GGally) #masks dbplyr::nasa
+library(relaimpo)
+library(car)
+library(QuantPsyc)
+library(broom)
+library(survey)
+library(stringr)
+library(lubridate)
+library(ggforce)
+library(reshape2)
+library(rpart)
+library(corrplot)
+library(lattice)
+library(lava)
+library(caret)
+library(RANN)
+library(psych) 
+library(wordcloud2)
+library(gridExtra)
+
+library(ggalluvial)
+library(ggeffects)
+library(viridis)
+library(countrycode)
+library(highcharter)
+
+
+
+library(ggthemes) # visualization
+library(scales) # visualization
+library(geosphere) #distance cal
+library(jsonlite)
+library(data.table)
+library(corrplot)
+library(tidytext)
+library(rpart)
+library(xgboost)
+library(glmnet) #regularization
+library(plotly) # Interactive data visualizations
+library(party)
+library(randomForest)
+library(htmlwidgets)
+library(IRdisplay)
+library(packcircles)
+library(tm)
+library(wordcloud)
+library(MVN)
+
+library(DAAG)
+
+
+```
+
+
+
+
+## import data 
+```{r}
+path <- "/Users/garbamoussa/OneDrive/Bureau/GEM_data/GEM_model_2020/Datasets_2020/DATA_NEW_MODEL.xlsx"
+excel_sheets(path = path)
+```
+
+
+
+```{r}
+ 
+# Countries list 
+Countries  <- read_excel(path , sheet = "Countries")
+Entry_age_duration  <- read_excel(path , sheet = "Entry_age_duration")
+Gross_enrolment_rate  <- read_excel(path , sheet = "Gross enrolment rate")
+Aid_to_basic_education  <- read_excel(path , sheet = "Aid_to_basic_education")
+Completude_rate  <- read_excel(path , sheet = "Completude_rate")
+Enrolment_Repeaters  <- read_excel(path , sheet = "Enrolment_Repeaters")
+Pop_UN  <- read_excel(path , sheet = "Pop_UN")
+Survey_literacy  <- read_excel(path , sheet = "Survey_literacy")
+Expenditure_PTR  <- read_excel(path , sheet = "Expenditure_PTR")
+Const_teacher_GDP_mult  <- read_excel(path , sheet = "Const_teacher_GDP_mult")
+PTR  <- read_excel(path , sheet = "PTR")
+Survey_Portion_P_S_L_U  <- read_excel(path , sheet = "Survey_Portion_P_S_L_U")
+GDP_Gorwth_Poverty  <- read_excel(path , sheet = "GDP_Gorwth_Poverty")
+Drop_out_rate  <- read_excel(path , sheet = "Drop_out_rate")
+
+
+```
+
+
+
+```{r}
+head(Countries)
+```
+
+```{r}
+head(Entry_age_duration)
+```

@@ -1,0 +1,807 @@
+---
+title: "Analyse"
+author: "GARBA Moussa"
+date: "2/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r }
+#install.packages("VIM")
+#install.packages("VIM", dependencies = TRUE)
+#install.packages("naniar")
+#install.packages("missMDA")
+#install.packages("Amelia")
+#install.packages("mice")
+#install.packages("missForest")
+#install.packages("FactoMineR")
+
+#install.packages("DescTools")
+```
+
+
+
+
+```{r }
+library(readxl)
+library(tidyverse)
+library(naniar)
+library(FactoMineR)
+library(missMDA)
+library(SnowballC) # for stemming
+library(readxl) # for read xlsx file 
+library(scales)
+library(plotly)
+library(kableExtra)
+library(ggpubr)
+library(corrr)
+library(DataExplorer)
+library(SmartEDA)
+
+
+
+library(broom)
+
+library(stringr)
+library(lubridate)
+library(ggforce)
+library(reshape2)
+
+library(corrplot)
+library(lattice)
+library(lava)
+library(caret)
+
+
+
+
+
+```
+
+
+#1. Data exploration 
+
+##1.1 Data 
+
+
+## import data 
+```{r}
+ 
+data_ex5  <- read_excel("/Users/garbamoussa/Desktop/Bureau/R/Education_Data/Data/Excel_Annex.xlsx", sheet = "Ex5")
+
+```
+
+
+## print shortly some rows  
+
+
+```{r}
+glimpse(data_ex5)
+```
+
+
+```{r }
+head(data_ex5)
+```
+
+
+## Replace % by Percent 
+```{r}
+data_ex5 <- data_ex5 %>%
+   rename_all(.funs = funs(sub("%", "Percent", names(data_ex5)))) 
+
+```
+
+
+## Remove Whispace into columns names 
+```{r}
+
+data_ex5 %>%  
+  select_all(~gsub("\\s+|\\.", "_", .)) %>% 
+  select_all(tolower)
+
+```
+
+```{r}
+names(data_ex5) <- gsub(" ", "_", names(data_ex5))
+        
+```
+
+
+## Missing value analysis 
+   
+```{r}
+
+# Overview of the data - Type = 1
+ExpData(data=data_ex5,type=1)
+
+# Structure of the data - Type = 2
+ExpData(data=data_ex5,type=2)
+
+```
+
+## disctinct value into each column by class
+
+```{r }
+#the map_df function combines the data frames row-wise into a single data frame.
+
+data_ex5 %>% map_df(~(data.frame(n_distinct = n_distinct(.x),
+                                  class = class(.x))))
+``` 
+
+## Unique value into each categorical variables 
+
+```{r }
+unique(data_ex5[c("Region", "Location", "School_Type")])
+
+```
+
+
+
+## Number missing value by each column 
+
+
+```{r}
+gg_miss_var(data_ex5)
+```
+
+
+
+
+##  percentage of missing value in the data. 
+```{r}
+ 
+pct_miss(data_ex5)
+```
+
+
+
+
+```{r }
+sapply(data_ex5, function(x) sum(is.na(x)))
+```
+
+## number of missing values in the  
+
+```{r}
+n_miss(data_ex5) 
+```
+
+
+
+## Data shape without missing value
+
+```{r}
+n_complete(data_ex5) 
+```
+
+
+## Number of missing value for Water variable 
+
+```{r}
+n_miss(data_ex5$Water)
+```
+
+
+## Display each missing value by row 
+
+```{r}
+as_shadow(data_ex5)
+```
+
+
+
+
+```{r}
+bind_shadow(data_ex5)
+```
+
+
+# Plot with missing values
+
+
+```{r}
+data_ex5 %>%
+  group_by(data_ex5$Region) %>%
+  miss_var_summary()
+```
+
+
+
+
+```{r}
+data_ex5 %>%
+  bind_shadow() %>%
+  group_by(Region) %>%
+  summarise_at(.vars = "Location",
+               .funs = c("mean", "sd", "var", "min", "max"),
+               na.rm = TRUE)
+```
+
+## Descrition statistique for Learning achievement score 
+
+
+```{r}
+data_ex5 %>%
+  bind_shadow() %>%
+  group_by(Region) %>%
+  summarise_at(.vars = "Learning_achievement_score",
+               .funs = c("mean", "sd", "var", "min", "max"),
+               na.rm = TRUE)
+
+
+```
+
+## Summary description statistique for each variable 
+
+```{r }
+summary(data_ex5)
+```
+
+## Convert each categorical variable to factor 
+
+```{r }
+data_ex5$Region   = as.factor(data_ex5$Region)
+data_ex5$Location   = as.factor(data_ex5$Location)
+data_ex5$School_Type  = as.factor(data_ex5$School_Type)
+
+```
+
+
+## Plot percentage for missing value for each variable 
+```{r}
+vis_miss(data_ex5, sort_miss = TRUE) 
+```
+
+
+
+## Plot by facet Region for Electricity and Water 
+```{r}
+ggplot(data_ex5, 
+       aes(x = Electricity, 
+           y = Water)) + 
+  geom_miss_point() + 
+  facet_wrap(~data_ex5$Region)+ 
+  theme_dark()
+
+```
+
+## Electricity density 
+
+```{r}
+ggplot( bind_shadow(data_ex5),
+       aes(x = Electricity,
+           fill = Water)) + 
+  geom_density(alpha=0.5)
+```
+
+
+
+
+```{r}
+ggplot( bind_shadow(data_ex5),
+       aes(x = Electricity,
+           fill = Toilets)) + 
+  geom_density(alpha=0.5)
+```
+
+# Histogram for dropout rate 
+
+```{r}
+## example d'une graphique permettant de representer l'histogramme d'une variable 
+ggplot(data_ex5) + geom_histogram(aes(x = Dropout_rate), fill="darkgreen")
+```
+
+## Bar plot for Region 
+```{r}
+ggplot(data_ex5) + geom_bar(aes(x = Region),color = "black", fill="darkgreen")
+```
+
+
+## Number of dropout rate for each region 
+
+```{r}
+ggplot(data_ex5) + geom_bar(aes(x = Dropout_rate, y = Region), stat = "identity")
+
+```
+
+## Relationship between Electricity and Dropout_rate for each region 
+```{r}
+# Scatterplot
+ggplot(data_ex5, aes(x=Electricity, y=Dropout_rate)) + 
+  geom_point(aes(col=Region, size=Water)) + 
+  geom_smooth(method="loess", se=F) + 
+  xlim(c(0, 1)) + 
+  ylim(c(-50, 50)) + 
+  labs(subtitle="Electricity Vs Dropout_rate", 
+       y="Dropout_rate", 
+       x="Electricity", 
+       title="Relationship between Electricity and Dropout_rate", 
+       caption = "Source: Education data")
+
+```
+
+
+```{r }
+# remove dropout rate into dataframe 
+df = subset(data_ex5, select = -c(Dropout_rate))
+
+# Identifier les variables numériques 
+numericData <- df[sapply(df, is.numeric)]
+
+#correlation 
+descrCor <- cor(numericData, use="pairwise.complete.obs")
+#descrCor <-  max(descrCor,na.rm=TRUE)
+# display matrice correlation 
+print(descrCor)
+```
+
+
+## coorplot  for independant variables 
+
+
+```{r }
+# Visualize Correlation Matrix
+corrplot(descrCor, order = "FPC", method="number", type = "lower", tl.cex = 0.7, tl.col = rgb(0, 0, 0))
+
+
+#corrplot(cor(df), order = "FPC", method = "color", type = "lower", tl.cex = 0.7, tl.col = rgb(0, 0, 0))
+```
+
+
+
+
+```{r }
+
+corrplot(descrCor, type="upper", order="hclust", tl.col="black", tl.srt=45)
+```
+
+
+## Remove NA values 
+
+```{r }
+data_ex5<-na.omit(data_ex5)
+
+```
+
+
+
+
+```{r }
+# Checking Variables that are highly correlated
+highlyCorrelated = findCorrelation(descrCor, cutoff=0.7)
+
+#Identifying Variable Names of Highly Correlated Variables
+highlyCorCol = colnames(numericData)[highlyCorrelated]
+
+#Print highly correlated attributes
+highlyCorCol
+
+
+#Remove highly correlated variables and create a new dataset
+dat3 = df[, -which(colnames(df) %in% highlyCorCol)]
+dim(dat3)
+
+
+
+```
+
+
+
+
+
+```{r }
+#Build Linear Regression Model
+fit = lm(Dropout_rate ~ ., data=data_ex5)
+
+#Check Model Performance
+summary(fit)
+
+#Extracting Coefficients
+summary(fit)$coeff
+anova(fit)
+
+par(mfrow=c(2,2))
+plot(fit)
+```
+
+
+```{r }
+
+anova(fit)
+```
+
+
+Region, Location
+School Type
+Water 
+Electricity
+Toilets
+Sanitary towels for girl 
+Percent classrooms With Black Booards
+
+Pupil Teacher Ratio 
+Class Size
+Percent student with English Textbook 
+Percent student with Math Textbook 
+2018_Percent_repeaters
+Repetition_rate
+Orphans_Prim 
+
+
+```{r }
+
+summary(fit)$r.squared
+summary(fit)$adj.r.squared
+AIC(fit)
+BIC(fit)
+```
+
+
+
+
+```{r }
+require(MASS)
+require(boot.StepAIC)
+step <- stepAIC(fit, direction="both")
+summary(step)
+
+
+```
+
+
+```{r }
+step <- stepAIC(fit, direction="backward")
+summary(step)
+
+```
+
+
+
+```{r }
+step <- stepAIC(fit, direction="forward")
+summary(step)
+```
+
+
+```{r }
+#Stepwise Selection with BIC
+n = dim(data_ex5)[1]
+stepBIC = stepAIC(fit,k=log(n))
+summary(stepBIC)
+```
+
+
+```{r }
+library(car)
+#Autocorrelation Test
+#durbinWatsonTest(stepBIC)
+dwtest(stepBIC)
+
+#Normality Of Residuals (Should be > 0.05)
+res=residuals(stepBIC,type="pearson")
+shapiro.test(res)
+
+#Testing for heteroscedasticity (Should be > 0.05)
+ncvTest(stepBIC)
+
+#Outliers – Bonferonni test
+outlierTest(stepBIC)
+
+#See Residuals
+resid = residuals(stepBIC)
+
+#Relative Importance
+install.packages("relaimpo")
+library(relaimpo)
+calc.relimp(stepBIC)
+
+```
+```{r }
+
+#See Predicted Value
+pred = predict(stepBIC,data_ex5)
+#See Actual vs. Predicted Value
+finaldata = cbind(data_ex5,pred)
+print(head(subset(finaldata, select = c(Dropout_rate,pred))))
+
+```
+
+
+
+
+```{r }
+#Calculating RMSE
+rmse = sqrt(mean((data_ex5$Dropout_rate - pred)^2))
+print(rmse)
+
+```
+
+```{r }
+#K-fold cross-validation
+library(DAAG)
+kfold = cv.lm(data=data_ex5, stepBIC, m=5)
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+
+```
+
